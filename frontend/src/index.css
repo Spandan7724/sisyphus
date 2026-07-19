@@ -16,7 +16,7 @@
   --color-moss: #2f6b4f;
   --color-moss-deep: #24523d;
   --color-moss-soft: #eaf2ed;
-  --color-amber: #a06b1f;
+  --color-amber: #8a5a15;
   --color-amber-soft: #f8efdd;
   --color-clay: #a63d2f;
   --color-clay-soft: #f9e9e5;
@@ -29,6 +29,54 @@ html {
   -webkit-font-smoothing: antialiased;
 }
 
+body {
+  margin: 0;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
 ::selection {
   background: var(--color-moss-soft);
+}
+
+@media (pointer: coarse) {
+  button,
+  select,
+  input:not([type='file']) {
+    min-height: 44px;
+  }
+
+  button {
+    min-width: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

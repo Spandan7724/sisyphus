@@ -1,54 +1,87 @@
 // The interview: one focused question at a time, plus agent-suggested follow-ups.
 
-import { useState } from 'react'
-import { AnimatePresence, motion } from 'motion/react'
+import { useId, useState } from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowRight, Sparkles } from 'lucide-react'
-import { api } from '../api'
+import { ArrowRight, BookOpen, Search } from 'lucide-react'
+import { api, getErrorMessage } from '../api'
 import { useQuestions } from '../hooks'
-import { Button, Card, Chip, EmptyState, SectionLabel, Spinner } from '../components/ui'
+import { sectionLabel, sensitivityLabel } from '../presentation'
+import {
+  Button,
+  Card,
+  Chip,
+  EmptyState,
+  InlineError,
+  QueryError,
+  SectionLabel,
+  SkeletonRows,
+} from '../components/ui'
 
 export function OnboardingView() {
   const questions = useQuestions()
   const queryClient = useQueryClient()
+  const answerId = useId()
+  const helpId = useId()
+  const reduceMotion = useReducedMotion()
   const [text, setText] = useState('')
 
   const answer = useMutation({
     mutationFn: api.answer,
     onSuccess: () => {
       setText('')
-      queryClient.invalidateQueries()
+      queryClient.invalidateQueries({ queryKey: ['questions'] })
+      queryClient.invalidateQueries({ queryKey: ['facts'] })
     },
   })
   const generate = useMutation({
     mutationFn: api.generateQuestions,
-    onSuccess: () => queryClient.invalidateQueries(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['questions'] }),
   })
 
-  if (questions.isLoading) return <Spinner label="Loading…" />
+  if (questions.isLoading) return <SkeletonRows label="Loading the interview" rows={2} />
+  if (questions.isError) {
+    return (
+      <QueryError
+        error={questions.error}
+        title="We couldn't load the interview."
+        onRetry={() => questions.refetch()}
+      />
+    )
+  }
+
   const pending = questions.data ?? []
   const current = pending[0]
-  const required = pending.filter((q) => !q.optional).length
+  const required = pending.filter((question) => !question.optional).length
+
+  const saveAnswer = () => {
+    if (!current || !text.trim() || answer.isPending) return
+    answer.mutate({
+      section: current.section,
+      key: current.key,
+      value: { text: text.trim() },
+    })
+  }
 
   return (
     <div className="space-y-8">
-      <header className="flex items-end justify-between">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="font-display text-2xl">The interview</h1>
           <p className="mt-1 text-[13px] text-ink-soft">
-            Only what your resume didn't answer. Come back anytime — it picks up where you left.
+            Only what your resume did not answer. Come back anytime; it picks up where you left off.
           </p>
         </div>
         {pending.length > 0 && (
           <Chip tone={required ? 'amber' : 'neutral'}>
-            {pending.length} left{required ? ` · ${required} required` : ''}
+            {required ? `${required} required` : `${pending.length} optional`}
           </Chip>
         )}
       </header>
 
       {!current && (
         <EmptyState title="Nothing left to ask.">
-          The agent can look over your profile and suggest deeper questions.
+          The agent can review your profile and suggest deeper questions.
         </EmptyState>
       )}
 
@@ -56,92 +89,117 @@ export function OnboardingView() {
         {current && (
           <motion.div
             key={`${current.section}.${current.key}`}
-            initial={{ opacity: 0, y: 8 }}
+            initial={reduceMotion ? false : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.18 }}
+            exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
+            transition={{ duration: reduceMotion ? 0 : 0.18 }}
           >
-            <Card className="p-6">
-              <div className="mb-3 flex items-center gap-2">
-                <SectionLabel>{current.section}</SectionLabel>
+            <Card className="p-4 sm:p-6">
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <SectionLabel>{sectionLabel(current.section)}</SectionLabel>
                 {current.origin === 'generated' && (
                   <Chip tone="moss">
-                    <Sparkles className="mr-1 h-3 w-3" /> suggested by the agent
+                    <BookOpen className="mr-1 h-3 w-3" aria-hidden="true" /> Suggested from your profile
                   </Chip>
                 )}
-                {current.optional && <Chip>optional</Chip>}
+                {current.optional && <Chip>Optional</Chip>}
                 {current.sensitivity !== 'normal' && (
-                  <Chip tone="amber">{current.sensitivity}</Chip>
+                  <Chip tone="amber">{sensitivityLabel(current.sensitivity)}</Chip>
                 )}
               </div>
-              <p className="font-display text-xl leading-snug">{current.question}</p>
+              <h2 className="text-wrap-pretty font-display text-xl leading-snug">{current.question}</h2>
               {current.rationale && (
                 <p className="mt-2 text-[12.5px] text-ink-soft italic">
-                  why: {current.rationale}
+                  Why this helps: {current.rationale}
                 </p>
               )}
-              <textarea
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                rows={4}
-                autoFocus
-                placeholder="Answer in your own words…"
-                className="mt-4 w-full resize-y rounded-lg border border-line bg-paper px-3 py-2.5 text-[14px] leading-relaxed outline-none focus:border-moss"
-              />
-              <div className="mt-3 flex items-center justify-between">
-                <span className="text-[12px] text-ink-faint">
-                  Saved as a confirmed fact — reused across applications.
-                </span>
-                <div className="flex gap-2">
-                  {current.optional && (
-                    <Button
-                      variant="quiet"
-                      onClick={() =>
-                        answer.mutate({ section: current.section, key: current.key, skip: true })
-                      }
-                    >
-                      Skip
-                    </Button>
-                  )}
-                  <Button
-                    disabled={!text.trim() || answer.isPending}
-                    onClick={() =>
-                      answer.mutate({
-                        section: current.section,
-                        key: current.key,
-                        value: { text: text.trim() },
-                      })
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  saveAnswer()
+                }}
+              >
+                <label htmlFor={answerId} className="sr-only">Your answer</label>
+                <textarea
+                  id={answerId}
+                  value={text}
+                  onChange={(event) => setText(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+                      event.preventDefault()
+                      saveAnswer()
                     }
-                  >
-                    Save answer <ArrowRight className="h-3.5 w-3.5" />
-                  </Button>
+                  }}
+                  rows={4}
+                  autoFocus
+                  aria-describedby={helpId}
+                  placeholder="Answer in your own words…"
+                  className="mt-4 w-full resize-y rounded-lg border border-line bg-paper px-3 py-2.5 text-[14px] leading-relaxed outline-none placeholder:text-ink-soft focus-visible:border-moss focus-visible:ring-1 focus-visible:ring-moss"
+                />
+                <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <span id={helpId} className="text-[12px] leading-relaxed text-ink-soft">
+                    {current.optional
+                      ? 'Skip leaves this detail out of your profile. You can add it later.'
+                      : 'Saved as a confirmed fact and reused where relevant. Press Ctrl or Command + Enter to save.'}
+                  </span>
+                  <div className="flex shrink-0 justify-end gap-2">
+                    {current.optional && (
+                      <Button
+                        type="button"
+                        variant="quiet"
+                        disabled={answer.isPending}
+                        onClick={() =>
+                          answer.mutate({ section: current.section, key: current.key, skip: true })
+                        }
+                      >
+                        Skip this question
+                      </Button>
+                    )}
+                    <Button type="submit" disabled={!text.trim() || answer.isPending}>
+                      {answer.isPending ? 'Saving…' : 'Save answer'}
+                      {!answer.isPending && <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />}
+                    </Button>
+                  </div>
                 </div>
-              </div>
+                {answer.isError && (
+                  <div className="mt-3">
+                    <InlineError
+                      message={`Your answer wasn't saved. ${getErrorMessage(answer.error)}`}
+                    />
+                  </div>
+                )}
+              </form>
             </Card>
           </motion.div>
         )}
       </AnimatePresence>
 
       {pending.length > 1 && (
-        <div className="text-[12px] text-ink-faint">
-          Up next:{' '}
-          {pending
-            .slice(1, 4)
-            .map((q) => q.question)
-            .join('  ·  ')}
-          {pending.length > 4 && '  …'}
+        <div className="flex min-w-0 items-center gap-2 text-[12px] text-ink-soft">
+          <span className="shrink-0">Up next:</span>
+          <span className="min-w-0 truncate" title={pending[1].question}>{pending[1].question}</span>
+          {pending.length > 2 && <span className="shrink-0">+{pending.length - 2} more</span>}
         </div>
       )}
 
       <div className="border-t border-line-soft pt-5">
-        <Button variant="ghost" onClick={() => generate.mutate()} disabled={generate.isPending}>
-          <Sparkles className="h-3.5 w-3.5" />
-          {generate.isPending ? 'Reading your profile…' : 'Ask the agent for deeper questions'}
-        </Button>
-        {generate.isSuccess && generate.data.length === 0 && (
-          <span className="ml-3 text-[12px] text-ink-faint">
-            No new gaps found right now.
-          </span>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button variant="ghost" onClick={() => generate.mutate()} disabled={generate.isPending}>
+            <Search className="h-3.5 w-3.5" aria-hidden="true" />
+            {generate.isPending ? 'Reviewing your profile…' : 'Find deeper questions'}
+          </Button>
+          {generate.isSuccess && generate.data.length === 0 && (
+            <span role="status" className="text-[12px] text-ink-soft">
+              No new gaps found right now.
+            </span>
+          )}
+        </div>
+        {generate.isError && (
+          <div className="mt-2">
+            <InlineError
+              message={`The profile review couldn't finish. ${getErrorMessage(generate.error)}`}
+            />
+          </div>
         )}
       </div>
     </div>

@@ -68,13 +68,53 @@ export interface Question {
   rationale: string | null
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, init)
-  if (!res.ok) {
-    const body = await res.text()
-    throw new Error(`${res.status}: ${body.slice(0, 300)}`)
+export class ApiError extends Error {
+  status: number | null
+
+  constructor(message: string, status: number | null = null) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
   }
-  return res.json() as Promise<T>
+}
+
+function messageForStatus(status: number): string {
+  if (status === 400 || status === 422) {
+    return "That information couldn't be accepted. Check it and try again."
+  }
+  if (status === 401) return 'Your session has ended. Refresh the page and try again.'
+  if (status === 403) return "You don't have permission to make that change."
+  if (status === 404) return "That item couldn't be found. It may have changed elsewhere."
+  if (status === 409) return 'This changed elsewhere before your update finished. Refresh and try again.'
+  if (status === 413) return 'That file is too large. Choose a smaller PDF or DOCX file.'
+  if (status === 415) return 'That file type is not supported. Choose a PDF or DOCX file.'
+  if (status === 429) return 'The service is busy right now. Wait a moment, then try again.'
+  if (status >= 500) return "The service couldn't finish that request. Try again in a moment."
+  return "That request couldn't be completed. Try again."
+}
+
+export function getErrorMessage(
+  error: unknown,
+  fallback = "That didn't work. Try again.",
+): string {
+  return error instanceof Error && error.message ? error.message : fallback
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  let res: Response
+  try {
+    res = await fetch(path, init)
+  } catch {
+    throw new ApiError("We couldn't reach the service. Check your connection and try again.")
+  }
+  if (!res.ok) {
+    throw new ApiError(messageForStatus(res.status), res.status)
+  }
+  try {
+    return (await res.json()) as T
+  } catch {
+    throw new ApiError("The service returned an unreadable response. Refresh and try again.")
+  }
 }
 
 const json = (body: unknown): RequestInit => ({

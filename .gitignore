@@ -40,3 +40,9 @@ docs/
 .claude/
 spikes/
 sample_resume/
+.agents/
+.claude/
+.codex/
+.impeccable/
+PRODUCT.md
+DESIGN.md
