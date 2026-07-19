@@ -1,17 +1,48 @@
 [project]
 name = "job-appli"
 version = "0.1.0"
-description = "Add your description here"
+description = "Local autonomous job-search and job-application agent"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "alembic>=1.18.5",
     "dbos>=2.27.0",
     "fastapi>=0.139.2",
     "playwright>=1.61.0",
     "pydantic-ai>=2.12.0",
+    "pydantic-settings>=2.14.2",
+    "pymupdf>=1.28.0",
+    "python-docx>=1.2.0",
+    "python-multipart>=0.0.32",
+    "sse-starlette>=3.4.5",
+    "uvicorn>=0.51.0",
 ]
+
+[project.scripts]
+job-appli = "job_appli.main:run"
 
 [dependency-groups]
 dev = [
+    "httpx>=0.28.1",
+    "mammoth>=1.12.0",
+    "pypdf>=6.14.2",
+    "pytest>=9.1.1",
     "python-dotenv>=1.2.2",
+    "ruff>=0.15.22",
 ]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/job_appli"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
