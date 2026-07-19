@@ -45,10 +45,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
             runtime.shutdown()
 
+    from job_appli.llm.service import LLMService
+
     app = FastAPI(title="job-appli", lifespan=lifespan)
     app.state.settings = settings
     app.state.db = db
     app.state.artifacts = artifacts
+    app.state.llm = LLMService(settings, db)
 
     @app.get("/api/ping", response_model=Ping)
     def ping() -> Ping:
@@ -91,9 +94,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
         return StreamingResponse(stream(), media_type="text/event-stream")
 
+    from job_appli.web.onboarding import router as onboarding_router
     from job_appli.web.profile import router as profile_router
+    from job_appli.web.resumes import router as resumes_router
 
     app.include_router(profile_router, prefix="/api")
+    app.include_router(resumes_router, prefix="/api")
+    app.include_router(onboarding_router, prefix="/api")
 
     if FRONTEND_DIST.exists():
         app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="spa")

@@ -13,6 +13,7 @@ dependencies = [
     "pydantic-settings>=2.14.2",
     "pymupdf>=1.28.0",
     "python-docx>=1.2.0",
+    "python-dotenv>=1.2.2",
     "python-multipart>=0.0.32",
     "sse-starlette>=3.4.5",
     "uvicorn>=0.51.0",
@@ -27,7 +28,6 @@ dev = [
     "mammoth>=1.12.0",
     "pypdf>=6.14.2",
     "pytest>=9.1.1",
-    "python-dotenv>=1.2.2",
     "ruff>=0.15.22",
 ]
 

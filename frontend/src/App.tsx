@@ -1,122 +1,81 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+// App shell: dossier-style sidebar navigation around the three phase-1 views.
 
-function App() {
-  const [count, setCount] = useState(0)
+import { useState } from 'react'
+import { BookUser, ClipboardCheck, MessagesSquare } from 'lucide-react'
+import { useDraft, useLiveEvents, useQuestions, useResumes } from './hooks'
+import { ReviewView } from './views/Review'
+import { OnboardingView } from './views/Onboarding'
+import { ProfileView } from './views/Profile'
+
+type View = 'review' | 'interview' | 'profile'
+
+const NAV: { id: View; label: string; icon: typeof BookUser }[] = [
+  { id: 'review', label: 'Review', icon: ClipboardCheck },
+  { id: 'interview', label: 'Interview', icon: MessagesSquare },
+  { id: 'profile', label: 'Profile', icon: BookUser },
+]
+
+export default function App() {
+  const [view, setView] = useState<View>('review')
+  const live = useLiveEvents()
+
+  const resumes = useResumes()
+  const defaultResume = resumes.data?.find((r) => r.is_default) ?? resumes.data?.[0]
+  const draft = useDraft(defaultResume?.id ?? null)
+  const questions = useQuestions()
+  const counts: Record<View, number | undefined> = {
+    review: draft.data?.facts.filter((f) => !f.confirmed).length,
+    interview: questions.data?.length,
+    profile: undefined,
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="flex min-h-screen">
+      <aside className="fixed inset-y-0 flex w-56 flex-col border-r border-line bg-paper px-4 py-6">
+        <div className="px-2">
+          <span className="font-display text-[19px] font-medium tracking-tight">
+            Job<span className="text-moss italic"> Appli</span>
+          </span>
+          <p className="mt-0.5 text-[11px] text-ink-faint">your application dossier</p>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
 
-      <div className="ticks"></div>
+        <nav className="mt-8 space-y-0.5">
+          {NAV.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              onClick={() => setView(id)}
+              className={`flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] transition-colors ${
+                view === id
+                  ? 'bg-surface font-medium text-ink shadow-[0_1px_2px_rgba(35,32,25,0.06)] ring-1 ring-line'
+                  : 'text-ink-soft hover:bg-line-soft hover:text-ink'
+              }`}
+            >
+              <Icon className="h-4 w-4" strokeWidth={1.75} />
+              {label}
+              {!!counts[id] && (
+                <span className="ml-auto rounded-full bg-amber-soft px-1.5 py-0.5 text-[10.5px] font-semibold tabular-nums text-amber">
+                  {counts[id]}
+                </span>
+              )}
+            </button>
+          ))}
+        </nav>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+        <div className="mt-auto flex items-center gap-2 px-2.5 text-[11.5px] text-ink-faint">
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${live ? 'bg-moss' : 'bg-ink-faint'}`}
+          />
+          {live ? 'agent stream live' : 'connecting…'}
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      </aside>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      <main className="ml-56 flex-1">
+        <div className="mx-auto max-w-3xl px-8 py-10">
+          {view === 'review' && <ReviewView />}
+          {view === 'interview' && <OnboardingView />}
+          {view === 'profile' && <ProfileView />}
+        </div>
+      </main>
+    </div>
   )
 }
-
-export default App

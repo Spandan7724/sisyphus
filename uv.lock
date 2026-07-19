@@ -744,6 +744,7 @@ dependencies = [
     { name = "pydantic-settings" },
     { name = "pymupdf" },
     { name = "python-docx" },
+    { name = "python-dotenv" },
     { name = "python-multipart" },
     { name = "sse-starlette" },
     { name = "uvicorn" },
@@ -755,7 +756,6 @@ dev = [
     { name = "mammoth" },
     { name = "pypdf" },
     { name = "pytest" },
-    { name = "python-dotenv" },
     { name = "ruff" },
 ]
 
@@ -769,6 +769,7 @@ requires-dist = [
     { name = "pydantic-settings", specifier = ">=2.14.2" },
     { name = "pymupdf", specifier = ">=1.28.0" },
     { name = "python-docx", specifier = ">=1.2.0" },
+    { name = "python-dotenv", specifier = ">=1.2.2" },
     { name = "python-multipart", specifier = ">=0.0.32" },
     { name = "sse-starlette", specifier = ">=3.4.5" },
     { name = "uvicorn", specifier = ">=0.51.0" },
@@ -780,7 +781,6 @@ dev = [
     { name = "mammoth", specifier = ">=1.12.0" },
     { name = "pypdf", specifier = ">=6.14.2" },
     { name = "pytest", specifier = ">=9.1.1" },
-    { name = "python-dotenv", specifier = ">=1.2.2" },
     { name = "ruff", specifier = ">=0.15.22" },
 ]
 

@@ -3,7 +3,11 @@
 from functools import lru_cache
 from pathlib import Path
 
+from dotenv import load_dotenv
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+load_dotenv()
 
 
 class Settings(BaseSettings):
@@ -22,11 +26,21 @@ class Settings(BaseSettings):
     dbos_enabled: bool = True
     dbos_app_name: str = "job-appli"
 
-    llm_default_model: str = "openai:gpt-5-mini"
-    llm_fallback_model: str | None = None
-    llm_task_models: dict[str, str] = {}
-    llm_transport_retries: int = 2
-    llm_validation_retries: int = 1
+    llm_default_model: str = Field(
+        default="openai:gpt-5.6-terra", validation_alias="LLM_DEFAULT_MODEL"
+    )
+    llm_fallback_model: str | None = Field(
+        default=None, validation_alias="LLM_FALLBACK_MODEL"
+    )
+    llm_task_models: dict[str, str] = Field(
+        default_factory=dict, validation_alias="LLM_TASK_MODELS"
+    )
+    llm_transport_retries: int = Field(
+        default=2, validation_alias="LLM_TRANSPORT_RETRIES"
+    )
+    llm_validation_retries: int = Field(
+        default=1, validation_alias="LLM_VALIDATION_RETRIES"
+    )
 
     log_level: str = "INFO"
 

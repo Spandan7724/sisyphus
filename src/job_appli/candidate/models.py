@@ -73,6 +73,22 @@ class CandidateStory(Base):
     updated_at: Mapped[datetime] = mapped_column(default=utcnow, onupdate=utcnow)
 
 
+class InterviewQuestionRecord(Base):
+    __tablename__ = "interview_question"
+
+    id: Mapped[str] = mapped_column(sa.String(36), primary_key=True, default=new_id)
+    section: Mapped[str] = mapped_column(sa.String(50))
+    key: Mapped[str] = mapped_column(sa.String(100))
+    question: Mapped[str] = mapped_column(sa.Text())
+    rationale: Mapped[str | None] = mapped_column(sa.Text())
+    status: Mapped[str] = mapped_column(sa.String(20), default="pending", index=True)
+    created_at: Mapped[datetime] = mapped_column(default=utcnow)
+
+    __table_args__ = (
+        sa.UniqueConstraint("section", "key", name="uq_interview_question_slot"),
+    )
+
+
 class Resume(Base):
     __tablename__ = "resume"
 
