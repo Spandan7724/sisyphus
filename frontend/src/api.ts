@@ -68,6 +68,44 @@ export interface Question {
   rationale: string | null
 }
 
+export type PreferenceStrength = 'hard' | 'soft'
+
+export type PreferenceCategory =
+  | 'location'
+  | 'work_arrangement'
+  | 'work_authorization'
+  | 'compensation'
+  | 'employment_type'
+  | 'company'
+  | 'industry'
+  | 'role'
+  | 'seniority'
+  | 'technology'
+  | 'growth'
+  | 'work_environment'
+
+export type PreferenceOperator =
+  | 'allow_any'
+  | 'require_all'
+  | 'exclude'
+  | 'minimum'
+  | 'maximum'
+  | 'prefer'
+  | 'avoid'
+
+export interface PreferenceRule {
+  id: string
+  strength: PreferenceStrength
+  category: PreferenceCategory
+  operator: PreferenceOperator
+  values: string[]
+  enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type PreferenceRuleInput = Omit<PreferenceRule, 'id' | 'created_at' | 'updated_at'>
+
 export class ApiError extends Error {
   status: number | null
 
@@ -156,4 +194,12 @@ export const api = {
       '/api/onboarding/answer',
       json(body),
     ),
+
+  preferences: () => request<PreferenceRule[]>('/api/preferences'),
+  createPreference: (body: PreferenceRuleInput) =>
+    request<PreferenceRule>('/api/preferences', json(body)),
+  updatePreference: (id: string, body: PreferenceRuleInput) =>
+    request<PreferenceRule>(`/api/preferences/${id}`, { ...json(body), method: 'PUT' }),
+  deletePreference: (id: string) =>
+    request<{ deleted: string }>(`/api/preferences/${id}`, { method: 'DELETE' }),
 }

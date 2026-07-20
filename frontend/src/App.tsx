@@ -1,19 +1,21 @@
 // App shell: a chrome bar carrying the live activity ticker above a stone sidebar and the work surface.
 
 import { useEffect, useState } from 'react'
-import { BookUser, ClipboardCheck, MessagesSquare } from 'lucide-react'
+import { BookUser, ClipboardCheck, MessagesSquare, SlidersHorizontal } from 'lucide-react'
 import { LiveContext, useDraft, useLiveEvents, useQuestions, useResumes } from './hooks'
 import { eventLine } from './presentation'
 import { ReviewView } from './views/Review'
 import { OnboardingView } from './views/Onboarding'
 import { ProfileView } from './views/Profile'
+import { PreferencesView } from './views/Preferences'
 
-type View = 'review' | 'interview' | 'profile'
+type View = 'review' | 'interview' | 'profile' | 'preferences'
 
 const NAV: { id: View; label: string; icon: typeof BookUser }[] = [
   { id: 'review', label: 'Review', icon: ClipboardCheck },
   { id: 'interview', label: 'Interview', icon: MessagesSquare },
   { id: 'profile', label: 'Profile', icon: BookUser },
+  { id: 'preferences', label: 'Preferences', icon: SlidersHorizontal },
 ]
 
 function viewFromLocation(): View {
@@ -41,16 +43,19 @@ export default function App() {
     review: draft.data?.facts.filter((f) => !f.confirmed).length,
     interview: questions.data?.filter((question) => !question.optional).length,
     profile: undefined,
+    preferences: undefined,
   }
   const countTone: Record<View, string> = {
     review: 'bg-draft-soft text-draft ring-draft-mark/30',
     interview: 'bg-held-soft text-held ring-held-mark/30',
     profile: 'bg-panel text-ink-3 ring-line',
+    preferences: 'bg-panel text-ink-3 ring-line',
   }
   const countLabels: Record<View, string> = {
     review: 'facts to review',
     interview: 'required questions',
     profile: '',
+    preferences: '',
   }
 
   const navigate = (nextView: View) => {
@@ -120,6 +125,7 @@ export default function App() {
             {view === 'review' && <ReviewView />}
             {view === 'interview' && <OnboardingView />}
             {view === 'profile' && <ProfileView />}
+            {view === 'preferences' && <PreferencesView />}
           </div>
         </main>
       </div>

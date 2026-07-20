@@ -6,6 +6,7 @@ from alembic import context
 
 import job_appli.candidate.models  # noqa: F401
 import job_appli.db.models  # noqa: F401
+import job_appli.preferences.models  # noqa: F401
 from job_appli.config import get_settings
 from job_appli.db.base import Base, create_engine
 

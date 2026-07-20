@@ -211,6 +211,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Preferences */
+        get: operations["list_preferences_api_preferences_get"];
+        put?: never;
+        /** Create Preference */
+        post: operations["create_preference_api_preferences_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/preferences/{rule_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Preference */
+        put: operations["update_preference_api_preferences__rule_id__put"];
+        post?: never;
+        /** Delete Preference */
+        delete: operations["delete_preference_api_preferences__rule_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -308,6 +344,68 @@ export interface components {
             status: string;
             /** App */
             app: string;
+        };
+        /** PreferenceRuleIn */
+        PreferenceRuleIn: {
+            /**
+             * Strength
+             * @enum {string}
+             */
+            strength: "hard" | "soft";
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "location" | "work_arrangement" | "work_authorization" | "compensation" | "employment_type" | "company" | "industry" | "role" | "seniority" | "technology" | "growth" | "work_environment";
+            /**
+             * Operator
+             * @enum {string}
+             */
+            operator: "allow_any" | "require_all" | "exclude" | "minimum" | "maximum" | "prefer" | "avoid";
+            /** Values */
+            values: string[];
+            /**
+             * Enabled
+             * @default true
+             */
+            enabled: boolean;
+        };
+        /** PreferenceRuleOut */
+        PreferenceRuleOut: {
+            /**
+             * Strength
+             * @enum {string}
+             */
+            strength: "hard" | "soft";
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "location" | "work_arrangement" | "work_authorization" | "compensation" | "employment_type" | "company" | "industry" | "role" | "seniority" | "technology" | "growth" | "work_environment";
+            /**
+             * Operator
+             * @enum {string}
+             */
+            operator: "allow_any" | "require_all" | "exclude" | "minimum" | "maximum" | "prefer" | "avoid";
+            /** Values */
+            values: string[];
+            /**
+             * Enabled
+             * @default true
+             */
+            enabled: boolean;
+            /** Id */
+            id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
         };
         /** QuestionOut */
         QuestionOut: {
@@ -803,6 +901,125 @@ export interface operations {
                 "application/json": components["schemas"]["AnswerIn"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_preferences_api_preferences_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreferenceRuleOut"][];
+                };
+            };
+        };
+    };
+    create_preference_api_preferences_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreferenceRuleIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreferenceRuleOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_preference_api_preferences__rule_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreferenceRuleIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreferenceRuleOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_preference_api_preferences__rule_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {

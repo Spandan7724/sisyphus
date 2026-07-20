@@ -15,6 +15,8 @@ export const useFacts = () => useQuery({ queryKey: ['facts'], queryFn: api.facts
 export const useStories = () => useQuery({ queryKey: ['stories'], queryFn: api.stories })
 export const useQuestions = () =>
   useQuery({ queryKey: ['questions'], queryFn: () => api.nextQuestions(50) })
+export const usePreferences = () =>
+  useQuery({ queryKey: ['preferences'], queryFn: api.preferences })
 
 export type UploadStep = 'reading' | 'interpreting' | 'saving'
 
@@ -76,11 +78,13 @@ export function useLiveEvents(): LiveStream {
           keys = ['stories', 'draft']
         } else if (type.startsWith('onboarding.')) {
           keys = ['questions', 'facts']
+        } else if (type.startsWith('preferences.')) {
+          keys = ['preferences']
         } else {
-          keys = ['resumes', 'draft', 'facts', 'stories', 'questions']
+          keys = ['resumes', 'draft', 'facts', 'stories', 'questions', 'preferences']
         }
       } catch {
-        keys = ['resumes', 'draft', 'facts', 'stories', 'questions']
+        keys = ['resumes', 'draft', 'facts', 'stories', 'questions', 'preferences']
       }
       keys.forEach((key) => pendingKeys.current.add(key))
       window.clearTimeout(timer.current)
