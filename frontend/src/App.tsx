@@ -40,6 +40,11 @@ export default function App() {
     interview: questions.data?.filter((question) => !question.optional).length,
     profile: undefined,
   }
+  const countLabels: Record<View, string> = {
+    review: 'facts to review',
+    interview: 'required questions',
+    profile: '',
+  }
 
   const navigate = (nextView: View) => {
     if (nextView === view) return
@@ -55,8 +60,8 @@ export default function App() {
       >
         Skip to content
       </a>
-      <aside className="sticky top-0 z-30 flex w-full flex-col border-b border-line bg-paper px-4 py-3 md:fixed md:inset-y-0 md:w-56 md:border-b-0 md:border-r md:py-6">
-        <div className="flex items-center justify-between px-2 md:block">
+      <aside className="sticky top-0 z-30 flex w-full flex-col border-b border-line bg-surface px-4 py-3 md:fixed md:inset-y-0 md:w-56 md:border-b-0 md:border-r md:py-6">
+        <div className="flex items-center justify-between px-2 md:block md:border-b md:border-line md:pb-5">
           <div>
             <span className="font-display text-[19px] font-medium tracking-tight">
               Job<span className="text-moss italic"> Appli</span>
@@ -77,14 +82,17 @@ export default function App() {
               aria-current={view === id ? 'page' : undefined}
               className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-1.5 py-2 text-[12.5px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-moss focus-visible:ring-offset-2 focus-visible:ring-offset-paper md:w-full md:justify-start md:gap-2.5 md:px-2.5 md:text-[13.5px] ${
                 view === id
-                  ? 'bg-surface font-medium text-ink shadow-[0_1px_2px_rgba(35,32,25,0.06)] ring-1 ring-line'
+                  ? 'bg-moss font-medium text-white shadow-[0_1px_2px_rgba(35,32,25,0.08)]'
                   : 'text-ink-soft hover:bg-line-soft hover:text-ink'
               }`}
             >
               <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
               <span className="truncate">{label}</span>
               {!!counts[id] && (
-                <span className="hidden rounded-full bg-amber-soft px-1.5 py-0.5 text-[10.5px] font-semibold tabular-nums text-amber sm:inline-flex md:ml-auto" aria-label={`${counts[id]} required`}>
+                <span
+                  className={`hidden rounded-full px-1.5 py-0.5 text-[10.5px] font-semibold tabular-nums sm:inline-flex md:ml-auto ${view === id ? 'bg-surface text-amber' : 'bg-amber-soft text-amber'}`}
+                  aria-label={`${counts[id]} ${countLabels[id]}`}
+                >
                   {counts[id]}
                 </span>
               )}
@@ -102,7 +110,7 @@ export default function App() {
       </aside>
 
       <main id="main-content" tabIndex={-1} className="w-full flex-1 md:ml-56">
-        <div className="mx-auto max-w-3xl px-4 py-6 sm:px-8 sm:py-10">
+        <div className="mx-auto max-w-5xl px-4 py-6 sm:px-8 sm:py-10">
           {view === 'review' && <ReviewView />}
           {view === 'interview' && <OnboardingView />}
           {view === 'profile' && <ProfileView />}

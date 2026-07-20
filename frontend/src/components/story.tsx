@@ -195,14 +195,14 @@ export function StoryCard({
 
   return (
     <>
-      <Card className="overflow-hidden transition-shadow duration-150 hover:shadow-[0_2px_8px_rgba(35,32,25,0.08)] focus-within:shadow-[0_2px_8px_rgba(35,32,25,0.08)]">
+      <Card className={`overflow-hidden transition-all duration-150 hover:border-ink-faint hover:shadow-[0_2px_8px_rgba(35,32,25,0.08)] focus-within:border-ink-faint focus-within:shadow-[0_2px_8px_rgba(35,32,25,0.08)] ${story.confirmed ? '' : 'border-amber/30'}`}>
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="block w-full cursor-pointer p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-moss"
+          className="group block w-full cursor-pointer p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-moss"
           aria-label={`Read story: ${story.title}`}
         >
-          <h3 className="break-words font-display text-[15px] leading-snug">{story.title}</h3>
+          <h3 className="break-words font-display text-[15px] font-medium leading-snug">{story.title}</h3>
           {preview && (
             <p className="mt-1.5 line-clamp-2 break-words text-[12.5px] text-ink-soft">
               {preview}
@@ -214,11 +214,11 @@ export function StoryCard({
                 <Chip key={skill}>{skill}</Chip>
               ))}
             </div>
-            <span className="shrink-0 text-[11px] text-ink-soft">Read →</span>
+            <span className="shrink-0 text-[11px] text-ink-soft transition-colors group-hover:text-moss">Read →</span>
           </div>
         </button>
         {!story.confirmed && onConfirm && (
-          <div className="border-t border-line-soft px-4 py-3">
+          <div className="border-t border-line-soft bg-paper/60 px-4 py-3">
             <div className="flex justify-end">
               <Button variant="ghost" className="!text-[12px]" onClick={confirm} disabled={confirming}>
                 <Check className="h-3.5 w-3.5" aria-hidden="true" />

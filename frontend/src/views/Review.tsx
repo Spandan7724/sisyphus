@@ -11,12 +11,11 @@ import { StoryCard } from '../components/story'
 import {
   Button,
   Card,
-  Chip,
   Confidence,
   EmptyState,
   InlineError,
   QueryError,
-  SectionLabel,
+  SectionHeading,
   SkeletonRows,
 } from '../components/ui'
 
@@ -206,7 +205,7 @@ function FactRow({ fact }: { fact: DraftFact }) {
     <motion.div
       layout={!reduceMotion}
       exit={reduceMotion ? undefined : { opacity: 0, x: 24 }}
-      className={`group border-b border-line-soft px-4 py-3 last:border-b-0 ${lowConfidence ? 'bg-amber-soft/40' : ''}`}
+      className={`group border-b border-line-soft px-4 py-3 transition-colors last:border-b-0 ${lowConfidence ? 'bg-amber-soft/40 hover:bg-amber-soft/65' : 'hover:bg-line-soft/45'}`}
     >
       <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap sm:gap-3">
         <div className="w-full min-w-0 text-[12px] text-ink-soft sm:w-36 sm:shrink-0" title={label}>
@@ -223,7 +222,7 @@ function FactRow({ fact }: { fact: DraftFact }) {
               }
             }}
             aria-label={`${label} value`}
-            className="min-w-0 basis-full rounded-md border border-transparent bg-transparent px-2 py-1 text-[12px] outline-none focus-visible:border-moss focus-visible:bg-surface focus-visible:ring-1 focus-visible:ring-moss sm:basis-auto sm:flex-1"
+            className="min-w-0 basis-full rounded-md border border-transparent bg-transparent px-2 py-1 text-[12px] font-medium outline-none focus-visible:border-moss focus-visible:bg-surface focus-visible:ring-1 focus-visible:ring-moss sm:basis-auto sm:flex-1"
           />
           <Confidence value={fact.confidence} />
           {fact.evidence && (
@@ -329,10 +328,13 @@ export function ReviewView() {
   }
 
   const draftStories = (stories.data ?? []).filter((story) => !story.confirmed)
+  const totalFacts = draft.data?.facts.length ?? 0
+  const remainingItems = pending.length + draftStories.length
+  const reviewProgress = totalFacts === 0 ? 100 : Math.round((confirmedCount / totalFacts) * 100)
 
   return (
-    <div className="space-y-8">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="space-y-10">
+      <header className="flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <h1 className="font-display text-2xl">Review the draft</h1>
           <p className="mt-1 break-words text-[13px] text-ink-soft">
@@ -342,11 +344,29 @@ export function ReviewView() {
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           <NewResumeButton />
-          <Chip tone={pending.length ? 'amber' : 'moss'}>
-            {pending.length ? `${pending.length} to review` : 'All reviewed'}
-          </Chip>
         </div>
       </header>
+
+      <div className="flex flex-col gap-3 rounded-xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <span
+            className={`h-2 w-2 shrink-0 rounded-full ${remainingItems ? 'bg-amber' : 'bg-moss'}`}
+            aria-hidden="true"
+          />
+          <p className="min-w-0 text-[13px]">
+            <span className="font-semibold">
+              {remainingItems ? `${remainingItems} items need your decision` : 'Your draft is fully reviewed'}
+            </span>
+            <span className="text-ink-soft"> · {confirmedCount} facts confirmed</span>
+          </p>
+        </div>
+        <div className="flex items-center gap-3 sm:w-64">
+          <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-line" aria-hidden="true">
+            <span className="block h-full rounded-full bg-moss" style={{ width: `${reviewProgress}%` }} />
+          </span>
+          <span className="text-[11px] font-medium tabular-nums text-ink-soft">{reviewProgress}%</span>
+        </div>
+      </div>
 
       {pending.length === 0 && draftStories.length === 0 && (
         <EmptyState title={`All ${confirmedCount} facts confirmed.`}>
@@ -356,11 +376,8 @@ export function ReviewView() {
 
       {bySection.map(([section, facts]) => (
         <section key={section}>
-          <div className="mb-2 flex items-center justify-between gap-4">
-            <SectionLabel as="h2">{sectionLabel(section)}</SectionLabel>
-            <span className="text-[11px] text-ink-soft">{facts.length} pending</span>
-          </div>
-          <Card>
+          <SectionHeading meta={`${facts.length} pending`}>{sectionLabel(section)}</SectionHeading>
+          <Card className="overflow-hidden">
             <AnimatePresence initial={false}>
               {facts.map((fact) => (
                 <FactRow key={fact.id} fact={fact} />
@@ -372,8 +389,8 @@ export function ReviewView() {
 
       {draftStories.length > 0 && (
         <section>
-          <SectionLabel as="h2">Stories</SectionLabel>
-          <div className="mt-2 grid gap-3 sm:grid-cols-2">
+          <SectionHeading meta={`${draftStories.length} pending`}>Stories</SectionHeading>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {draftStories.map((story) => (
               <StoryCard
                 key={story.id}

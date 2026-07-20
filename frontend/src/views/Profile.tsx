@@ -14,7 +14,7 @@ import {
   EmptyState,
   InlineError,
   QueryError,
-  SectionLabel,
+  SectionHeading,
   SkeletonRows,
 } from '../components/ui'
 
@@ -115,7 +115,7 @@ function FactLine({ fact }: { fact: Fact }) {
   }
 
   return (
-    <div className="group border-b border-line-soft px-4 py-3 last:border-b-0">
+    <div className="group border-b border-line-soft px-4 py-3 transition-colors last:border-b-0 hover:bg-line-soft/45">
       <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap sm:gap-3">
         <div className="w-full text-[12px] text-ink-soft sm:w-40 sm:shrink-0" title={label}>
           {label}
@@ -151,7 +151,7 @@ function FactLine({ fact }: { fact: Fact }) {
           </>
         ) : (
           <>
-            <div className="min-w-0 flex-1 break-words text-[12px] leading-relaxed">
+            <div className="min-w-0 flex-1 break-words text-[12px] font-medium leading-relaxed">
               {fact.value.text ?? 'Not provided'}
             </div>
             <Chip tone={SOURCE_TONE[fact.source_type] ?? 'neutral'}>
@@ -322,16 +322,19 @@ export function ProfileView() {
   }
 
   return (
-    <div className="space-y-8">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="space-y-10">
+      <header className="flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="font-display text-2xl">Your profile</h1>
           <p className="mt-1 text-[13px] text-ink-soft">
-            The confirmed record the agent represents you with — {confirmed.length} facts,{' '}
-            {confirmedStories.length} stories.
+            The confirmed record the agent uses to represent you accurately.
           </p>
         </div>
-        <AddFact />
+        <div className="flex flex-wrap items-center gap-2">
+          <Chip tone="moss">{confirmed.length} facts</Chip>
+          <Chip>{confirmedStories.length} stories</Chip>
+          <AddFact />
+        </div>
       </header>
 
       {confirmed.length === 0 && (
@@ -342,8 +345,8 @@ export function ProfileView() {
 
       {bySection.map(([section, sectionFacts]) => (
         <section key={section}>
-          <SectionLabel as="h2">{sectionLabel(section)}</SectionLabel>
-          <Card className="mt-2">
+          <SectionHeading meta={`${sectionFacts.length} facts`}>{sectionLabel(section)}</SectionHeading>
+          <Card className="overflow-hidden">
             {sectionFacts.map((fact) => (
               <FactLine key={fact.id} fact={fact} />
             ))}
@@ -353,8 +356,8 @@ export function ProfileView() {
 
       {confirmedStories.length > 0 && (
         <section>
-          <SectionLabel as="h2">Stories</SectionLabel>
-          <div className="mt-2 grid gap-3 sm:grid-cols-2">
+          <SectionHeading meta={`${confirmedStories.length} stories`}>Stories</SectionHeading>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {confirmedStories.map((story) => (
               <StoryCard key={story.id} story={story} />
             ))}

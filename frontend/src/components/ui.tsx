@@ -18,6 +18,22 @@ export function SectionLabel({
   )
 }
 
+export function SectionHeading({
+  children,
+  meta,
+}: {
+  children: ReactNode
+  meta?: ReactNode
+}) {
+  return (
+    <div className="mb-3 flex items-center gap-3">
+      <h2 className="shrink-0 font-display text-[15px] font-medium text-ink">{children}</h2>
+      <span className="h-px flex-1 bg-line" aria-hidden="true" />
+      {meta && <span className="shrink-0 text-[11px] tabular-nums text-ink-soft">{meta}</span>}
+    </div>
+  )
+}
+
 export function Card({
   children,
   className = '',
