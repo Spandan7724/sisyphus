@@ -4,7 +4,14 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Check, FileUp, Quote, Trash2 } from 'lucide-react'
-import { api, getErrorMessage, type DraftFact } from '../api'
+import {
+  api,
+  getErrorMessage,
+  type Draft,
+  type DraftFact,
+  type Fact,
+  type Question,
+} from '../api'
 import { useDraft, useResumes, useStories } from '../hooks'
 import { factLabel, sectionLabel } from '../presentation'
 import { StoryCard } from '../components/story'
@@ -134,7 +141,15 @@ function NewResumeButton() {
   )
 }
 
-function FactRow({ fact }: { fact: DraftFact }) {
+function FactRow({
+  fact,
+  confirmError,
+  onConfirmError,
+}: {
+  fact: DraftFact
+  confirmError?: string
+  onConfirmError: (message: string | null) => void
+}) {
   const queryClient = useQueryClient()
   const reduceMotion = useReducedMotion()
   const serverText = useRef(fact.value.text ?? '')
@@ -153,10 +168,55 @@ function FactRow({ fact }: { fact: DraftFact }) {
 
   const confirm = useMutation({
     mutationFn: () => api.confirmFact(fact.id, edited ? { text: text.trim() } : undefined),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['draft'] })
-      queryClient.invalidateQueries({ queryKey: ['facts'] })
-      queryClient.invalidateQueries({ queryKey: ['questions'] })
+    onMutate: async () => {
+      onConfirmError(null)
+      await queryClient.cancelQueries({ queryKey: ['draft'] })
+      const drafts = queryClient.getQueriesData<Draft>({ queryKey: ['draft'] })
+      const optimisticValue = edited ? { text: text.trim() } : fact.value
+      queryClient.setQueriesData<Draft>({ queryKey: ['draft'] }, (current) =>
+        current
+          ? {
+              ...current,
+              facts: current.facts.map((candidate) =>
+                candidate.id === fact.id
+                  ? { ...candidate, value: optimisticValue, confirmed: true }
+                  : candidate,
+              ),
+            }
+          : current,
+      )
+      return { drafts }
+    },
+    onSuccess: (confirmedFact) => {
+      queryClient.setQueriesData<Draft>({ queryKey: ['draft'] }, (current) =>
+        current
+          ? {
+              ...current,
+              facts: current.facts.map((candidate) =>
+                candidate.id === confirmedFact.id
+                  ? { ...candidate, value: confirmedFact.value, confirmed: true }
+                  : candidate,
+              ),
+            }
+          : current,
+      )
+      queryClient.setQueryData<Fact[]>(['facts'], (current) =>
+        current?.map((candidate) =>
+          candidate.id === confirmedFact.id ? confirmedFact : candidate,
+        ),
+      )
+      queryClient.setQueryData<Question[]>(['questions'], (current) =>
+        current?.filter(
+          (question) =>
+            question.section !== confirmedFact.section || question.key !== confirmedFact.key,
+        ),
+      )
+    },
+    onError: (error, _variables, context) => {
+      for (const [queryKey, data] of context?.drafts ?? []) {
+        queryClient.setQueryData(queryKey, data)
+      }
+      onConfirmError(`“${label}” wasn't confirmed. ${getErrorMessage(error)}`)
     },
   })
   const discard = useMutation({
@@ -204,7 +264,7 @@ function FactRow({ fact }: { fact: DraftFact }) {
   return (
     <motion.div
       layout={!reduceMotion}
-      exit={reduceMotion ? undefined : { opacity: 0, x: 24 }}
+      exit={reduceMotion ? undefined : { opacity: 0, x: 16, transition: { duration: 0.12 } }}
       className={`group border-b border-line-soft px-4 py-3 transition-colors last:border-b-0 ${lowConfidence ? 'bg-amber-soft/40 hover:bg-amber-soft/65' : 'hover:bg-line-soft/45'}`}
     >
       <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap sm:gap-3">
@@ -263,14 +323,12 @@ function FactRow({ fact }: { fact: DraftFact }) {
           <span className="min-w-0 break-words">“{fact.evidence}”</span>
         </div>
       )}
-      {(confirm.isError || discard.isError) && (
+      {(confirmError || discard.isError) && (
         <div className="mt-2">
           <InlineError
-            error={confirm.error ?? discard.error}
+            error={discard.error}
             message={
-              confirm.isError
-                ? `“${label}” wasn't confirmed. ${getErrorMessage(confirm.error)}`
-                : `“${label}” wasn't discarded. ${getErrorMessage(discard.error)}`
+              confirmError ?? `“${label}” wasn't discarded. ${getErrorMessage(discard.error)}`
             }
           />
         </div>
@@ -285,6 +343,7 @@ export function ReviewView() {
   const draft = useDraft(defaultResume?.id ?? null)
   const stories = useStories()
   const queryClient = useQueryClient()
+  const [confirmationErrors, setConfirmationErrors] = useState<Record<string, string>>({})
   const confirmStory = useMutation({
     mutationFn: api.confirmStory,
     onSuccess: () => {
@@ -380,7 +439,20 @@ export function ReviewView() {
           <Card className="overflow-hidden">
             <AnimatePresence initial={false}>
               {facts.map((fact) => (
-                <FactRow key={fact.id} fact={fact} />
+                <FactRow
+                  key={fact.id}
+                  fact={fact}
+                  confirmError={confirmationErrors[fact.id]}
+                  onConfirmError={(message) =>
+                    setConfirmationErrors((current) => {
+                      if (message) return { ...current, [fact.id]: message }
+                      if (!(fact.id in current)) return current
+                      const next = { ...current }
+                      delete next[fact.id]
+                      return next
+                    })
+                  }
+                />
               ))}
             </AnimatePresence>
           </Card>
