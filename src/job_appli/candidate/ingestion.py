@@ -69,7 +69,20 @@ def ingest_resume(
     filename: str,
     make_default: bool = False,
 ) -> IngestResult:
+    def step(name: str, detail: str) -> None:
+        publisher.progress(
+            event_type="resume.progress",
+            aggregate_type="resume",
+            aggregate_id="pending",
+            actor="agent",
+            reason=detail,
+            payload={"step": name, "filename": filename},
+        )
+
+    step("reading", f"reading {filename}")
     text = extract_text(content, filename)
+
+    step("interpreting", f"interpreting {len(text):,} characters of resume text")
     prompt = load_prompt("resume_interpret")
     draft = llm.run(
         "resume_extraction",
@@ -78,6 +91,10 @@ def ingest_resume(
         prompt=prompt,
     )
 
+    step(
+        "saving",
+        f"drafting {len(draft.facts)} facts and {len(draft.stories)} stories",
+    )
     with db.session() as session:
         artifact = artifacts.save(
             session, content=content, kind="resume", original_filename=filename

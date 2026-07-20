@@ -11,6 +11,7 @@ import {
   Button,
   Card,
   Chip,
+  type ChipTone,
   EmptyState,
   InlineError,
   QueryError,
@@ -18,11 +19,11 @@ import {
   SkeletonRows,
 } from '../components/ui'
 
-const SOURCE_TONE: Record<string, 'neutral' | 'moss' | 'amber'> = {
+const SOURCE_TONE: Record<string, ChipTone> = {
   resume: 'neutral',
-  onboarding: 'moss',
+  onboarding: 'done',
   manual: 'neutral',
-  application_learned: 'amber',
+  application_learned: 'learned',
 }
 
 const SECTIONS = [
@@ -101,13 +102,13 @@ function FactLine({ fact }: { fact: Fact }) {
   if (deleteQueued) {
     return (
       <div
-        className="flex flex-wrap items-center justify-between gap-2 border-b border-line-soft bg-clay-soft/45 px-4 py-2.5 last:border-b-0"
+        className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-fail-soft/45 px-4 py-2.5 last:border-b-0"
         role="status"
         aria-live="polite"
       >
         <span className="text-[13px]">Removed “{label}” from your profile.</span>
         <div className="flex items-center gap-2">
-          <span className="text-[11.5px] text-ink-soft">Deleting in 5 seconds</span>
+          <span className="text-[11.5px] text-ink-3">Deleting in 5 seconds</span>
           <Button variant="quiet" onClick={undoDelete}>Undo</Button>
         </div>
       </div>
@@ -115,9 +116,9 @@ function FactLine({ fact }: { fact: Fact }) {
   }
 
   return (
-    <div className="group border-b border-line-soft px-4 py-3 transition-colors last:border-b-0 hover:bg-line-soft/45">
+    <div className="group border-b border-line px-4 py-3 transition-colors last:border-b-0 hover:bg-panel/45">
       <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap sm:gap-3">
-        <div className="w-full text-[12px] text-ink-soft sm:w-40 sm:shrink-0" title={label}>
+        <div className="w-full text-[12px] text-ink-3 sm:w-40 sm:shrink-0" title={label}>
           {label}
         </div>
         {editing ? (
@@ -136,7 +137,7 @@ function FactLine({ fact }: { fact: Fact }) {
               }}
               autoFocus
               aria-label={`Edit ${label}`}
-              className="min-w-0 flex-1 rounded-md border border-line bg-surface px-2 py-1 text-[12px] outline-none focus-visible:border-moss focus-visible:ring-1 focus-visible:ring-moss"
+              className="min-w-0 flex-1 rounded-md border border-line bg-ground px-2 py-1 text-[12px] outline-none focus-visible:border-work-mark focus-visible:ring-1 focus-visible:ring-work-mark/30"
             />
             <Button
               className="!px-2.5"
@@ -237,7 +238,7 @@ function AddFact() {
             id={sectionId}
             value={section}
             onChange={(event) => setSection(event.target.value)}
-            className="rounded-md border border-line bg-surface px-2 py-1.5 text-[13px] focus-visible:border-moss focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-moss"
+            className="rounded-md border border-line bg-ground px-2 py-1.5 text-[13px] focus-visible:border-work-mark focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-work-mark/30"
           >
             {SECTIONS.map((item) => (
               <option key={item} value={item}>{sectionLabel(item)}</option>
@@ -251,7 +252,7 @@ function AddFact() {
             placeholder="Fact name, e.g. Portfolio"
             value={name}
             onChange={(event) => setName(event.target.value)}
-            className="w-full rounded-md border border-line bg-surface px-2 py-1.5 text-[13px] outline-none placeholder:text-ink-soft focus-visible:border-moss focus-visible:ring-1 focus-visible:ring-moss"
+            className="w-full rounded-md border border-line bg-ground px-2 py-1.5 text-[13px] outline-none placeholder:text-ink-3 focus-visible:border-work-mark focus-visible:ring-1 focus-visible:ring-work-mark/30"
           />
         </div>
         <div className="min-w-48 flex-[2]">
@@ -261,7 +262,7 @@ function AddFact() {
             placeholder="Value"
             value={text}
             onChange={(event) => setText(event.target.value)}
-            className="w-full rounded-md border border-line bg-surface px-2 py-1.5 text-[13px] outline-none placeholder:text-ink-soft focus-visible:border-moss focus-visible:ring-1 focus-visible:ring-moss"
+            className="w-full rounded-md border border-line bg-ground px-2 py-1.5 text-[13px] outline-none placeholder:text-ink-3 focus-visible:border-work-mark focus-visible:ring-1 focus-visible:ring-work-mark/30"
           />
         </div>
         <Button type="submit" disabled={!factKey(name) || !text.trim() || create.isPending}>
@@ -325,13 +326,13 @@ export function ProfileView() {
     <div className="space-y-10">
       <header className="flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="font-display text-2xl">Your profile</h1>
-          <p className="mt-1 text-[13px] text-ink-soft">
+          <h1 className="text-2xl">Your profile</h1>
+          <p className="mt-1 text-[13px] text-ink-3">
             The confirmed record the agent uses to represent you accurately.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Chip tone="moss">{confirmed.length} facts</Chip>
+          <Chip tone="done">{confirmed.length} facts</Chip>
           <Chip>{confirmedStories.length} stories</Chip>
           <AddFact />
         </div>

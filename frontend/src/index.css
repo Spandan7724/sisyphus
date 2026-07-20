@@ -1,29 +1,57 @@
+/* The original dossier palette, carried on the newer role-named token structure. */
+
 @import 'tailwindcss';
 
 @theme {
-  --font-display: 'Fraunces', Georgia, serif;
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-sans: 'Geist', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
 
-  --color-paper: #faf8f4;
-  --color-surface: #ffffff;
-  --color-ink: #232019;
-  --color-ink-soft: #6e6a5e;
-  --color-ink-faint: #a39e90;
+  --color-ground: #ffffff;
+  --color-panel: #f1eee6;
   --color-line: #e8e4da;
-  --color-line-soft: #f1eee6;
+  --color-line-firm: #ddd7ca;
+  --color-ink: #232019;
+  --color-ink-2: #4a453a;
+  --color-ink-3: #6e6a5e;
 
-  --color-moss: #2f6b4f;
-  --color-moss-deep: #24523d;
-  --color-moss-soft: #eaf2ed;
-  --color-amber: #8a5a15;
-  --color-amber-soft: #f8efdd;
-  --color-clay: #a63d2f;
-  --color-clay-soft: #f9e9e5;
+  /* Moss carries both the primary action and confirmation, as it did originally. */
+  --color-work: #2f6b4f;
+  --color-work-mark: #2f6b4f;
+  --color-work-soft: #eaf2ed;
+  --color-work-deep: #24523d;
+  /* Brightest green that still holds white label text at 4.5:1; hover fills only. */
+  --color-work-bright: #31855e;
+
+  --color-done: #2f6b4f;
+  --color-done-mark: #2f6b4f;
+  --color-done-soft: #eaf2ed;
+
+  /* Amber is the whole uncertainty family: draft, awaiting you, and learned while applying. */
+  --color-draft: #8a5a15;
+  --color-draft-mark: #8a5a15;
+  --color-draft-soft: #f8efdd;
+
+  --color-held: #8a5a15;
+  --color-held-mark: #8a5a15;
+  --color-held-soft: #f8efdd;
+
+  --color-learned: #8a5a15;
+  --color-learned-mark: #8a5a15;
+  --color-learned-soft: #f8efdd;
+
+  --color-fail: #a63d2f;
+  --color-fail-mark: #a63d2f;
+  --color-fail-soft: #f9e9e5;
+
+  /* Muted slate-blue at the same tonal weight as moss and amber, so it reads as
+     part of the family rather than borrowed from another palette. */
+  --color-attention: #2c6480;
+
+  --color-idle: #a39e90;
 }
 
 html {
-  background: var(--color-paper);
+  background: var(--color-ground);
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -55,7 +83,7 @@ p {
 }
 
 ::selection {
-  background: var(--color-moss-soft);
+  background: var(--color-work-soft);
 }
 
 @media (pointer: coarse) {

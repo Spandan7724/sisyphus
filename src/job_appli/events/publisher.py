@@ -2,6 +2,7 @@
 
 import asyncio
 import threading
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -43,6 +44,36 @@ class EventPublisher:
         session.flush()
         self._notify(self._serialize(event))
         return event
+
+    def progress(
+        self,
+        *,
+        event_type: str,
+        aggregate_type: str,
+        aggregate_id: str,
+        actor: str,
+        reason: str | None = None,
+        payload: dict[str, Any] | None = None,
+    ) -> None:
+        """Fan out an in-flight step to live subscribers without recording it.
+
+        Progress is a UI signal, not a domain fact: it never reaches the event log,
+        so replaying the stream still yields only what actually happened.
+        """
+        self._notify(
+            {
+                "id": 0,
+                "transient": True,
+                "event_type": event_type,
+                "aggregate_type": aggregate_type,
+                "aggregate_id": aggregate_id,
+                "actor": actor,
+                "reason": reason,
+                "payload": payload,
+                "workflow_id": None,
+                "created_at": datetime.now(UTC).isoformat(),
+            }
+        )
 
     def subscribe(self) -> asyncio.Queue[dict[str, Any]]:
         queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue(maxsize=500)

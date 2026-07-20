@@ -1,8 +1,9 @@
-// App shell: dossier-style sidebar navigation around the three phase-1 views.
+// App shell: a chrome bar carrying the live activity ticker above a stone sidebar and the work surface.
 
 import { useEffect, useState } from 'react'
 import { BookUser, ClipboardCheck, MessagesSquare } from 'lucide-react'
-import { useDraft, useLiveEvents, useQuestions, useResumes } from './hooks'
+import { LiveContext, useDraft, useLiveEvents, useQuestions, useResumes } from './hooks'
+import { eventLine } from './presentation'
 import { ReviewView } from './views/Review'
 import { OnboardingView } from './views/Onboarding'
 import { ProfileView } from './views/Profile'
@@ -23,6 +24,7 @@ function viewFromLocation(): View {
 export default function App() {
   const [view, setView] = useState<View>(viewFromLocation)
   const live = useLiveEvents()
+  const { connected, latest } = live
 
   useEffect(() => {
     if (!window.location.hash) window.history.replaceState(null, '', '#review')
@@ -40,6 +42,11 @@ export default function App() {
     interview: questions.data?.filter((question) => !question.optional).length,
     profile: undefined,
   }
+  const countTone: Record<View, string> = {
+    review: 'bg-draft-soft text-draft ring-draft-mark/30',
+    interview: 'bg-held-soft text-held ring-held-mark/30',
+    profile: 'bg-panel text-ink-3 ring-line',
+  }
   const countLabels: Record<View, string> = {
     review: 'facts to review',
     interview: 'required questions',
@@ -53,69 +60,70 @@ export default function App() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row">
+    <LiveContext.Provider value={live}>
+    <div className="flex min-h-screen flex-col">
       <a
         href="#main-content"
-        className="fixed left-3 top-3 z-50 -translate-y-20 rounded-lg bg-ink px-3 py-2 text-[13px] text-surface transition-transform focus:translate-y-0"
+        className="fixed left-3 top-3 z-50 -translate-y-20 rounded bg-ink px-3 py-2 text-[13px] text-white transition-transform focus:translate-y-0"
       >
         Skip to content
       </a>
-      <aside className="sticky top-0 z-30 flex w-full flex-col border-b border-line bg-surface px-4 py-3 md:fixed md:inset-y-0 md:w-56 md:border-b-0 md:border-r md:py-6">
-        <div className="flex items-center justify-between px-2 md:block md:border-b md:border-line md:pb-5">
-          <div>
-            <span className="font-display text-[19px] font-medium tracking-tight">
-              Job<span className="text-moss italic"> Appli</span>
-            </span>
-            <p className="mt-0.5 hidden text-[11px] text-ink-soft sm:block">your application dossier</p>
-          </div>
-          <div className="flex items-center gap-2 text-[11.5px] text-ink-soft md:hidden" role="status" aria-live="polite">
-            <span className={`h-1.5 w-1.5 rounded-full ${live ? 'bg-moss' : 'bg-ink-faint'}`} aria-hidden="true" />
-            {live ? 'Agent connected' : 'Connecting…'}
-          </div>
-        </div>
 
-        <nav className="mt-3 flex gap-1 md:mt-8 md:block md:space-y-0.5" aria-label="Dossier sections">
-          {NAV.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => navigate(id)}
-              aria-current={view === id ? 'page' : undefined}
-              className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-1.5 py-2 text-[12.5px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-moss focus-visible:ring-offset-2 focus-visible:ring-offset-paper md:w-full md:justify-start md:gap-2.5 md:px-2.5 md:text-[13.5px] ${
-                view === id
-                  ? 'bg-moss font-medium text-white shadow-[0_1px_2px_rgba(35,32,25,0.08)]'
-                  : 'text-ink-soft hover:bg-line-soft hover:text-ink'
-              }`}
-            >
-              <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-              <span className="truncate">{label}</span>
-              {!!counts[id] && (
-                <span
-                  className={`hidden rounded-full px-1.5 py-0.5 text-[10.5px] font-semibold tabular-nums sm:inline-flex md:ml-auto ${view === id ? 'bg-surface text-amber' : 'bg-amber-soft text-amber'}`}
-                  aria-label={`${counts[id]} ${countLabels[id]}`}
-                >
-                  {counts[id]}
-                </span>
-              )}
-            </button>
-          ))}
-        </nav>
-
-        <div className="mt-auto hidden items-center gap-2 px-2.5 text-[11.5px] text-ink-soft md:flex" role="status" aria-live="polite">
+      <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-4 border-b border-line bg-ground px-5">
+        <span className="shrink-0 text-[17.5px] font-semibold tracking-tight">Appli</span>
+        <div
+          className="flex min-w-0 items-center gap-2.5 font-mono text-[13.5px] text-ink-2"
+          role="status"
+          aria-live="polite"
+        >
           <span
-            className={`h-1.5 w-1.5 rounded-full ${live ? 'bg-moss' : 'bg-ink-faint'}`}
+            className={`h-2 w-2 shrink-0 rounded-full ${connected ? 'bg-work-mark' : 'bg-idle'}`}
             aria-hidden="true"
           />
-          {live ? 'Agent connected' : 'Connecting…'}
+          <span className="truncate">
+            {!connected ? 'connecting…' : latest ? eventLine(latest) : 'idle — no activity yet'}
+          </span>
         </div>
-      </aside>
+      </header>
 
-      <main id="main-content" tabIndex={-1} className="w-full flex-1 md:ml-56">
-        <div className="mx-auto max-w-5xl px-4 py-6 sm:px-8 sm:py-10">
-          {view === 'review' && <ReviewView />}
-          {view === 'interview' && <OnboardingView />}
-          {view === 'profile' && <ProfileView />}
-        </div>
-      </main>
+      <div className="flex flex-1 flex-col md:flex-row">
+        <aside className="shrink-0 border-b border-line bg-panel p-3 md:w-60 md:border-b-0 md:border-r">
+          <nav className="flex gap-1 md:flex-col md:gap-0.5" aria-label="Sections">
+            {NAV.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => navigate(id)}
+                aria-current={view === id ? 'page' : undefined}
+                className={`flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded px-3 py-2.5 text-[15px] transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-work-mark/30 md:w-full ${
+                  view === id
+                    ? 'bg-ground font-semibold text-ink ring-1 ring-inset ring-line-firm'
+                    : 'text-ink-2 hover:text-ink'
+                }`}
+              >
+                <Icon className="h-5 w-5 shrink-0 text-ink-3" strokeWidth={1.75} aria-hidden="true" />
+                <span className="truncate">{label}</span>
+                {!!counts[id] && (
+                  <span
+                    className={`ml-auto hidden items-center rounded-sm px-1.5 py-0.5 font-mono text-[12px] tabular-nums ring-1 ring-inset sm:inline-flex ${countTone[id]}`}
+                    aria-label={`${counts[id]} ${countLabels[id]}`}
+                  >
+                    {counts[id]}
+                  </span>
+                )}
+              </button>
+            ))}
+          </nav>
+        </aside>
+
+        <main id="main-content" tabIndex={-1} className="min-w-0 flex-1">
+          <div className="mx-auto max-w-4xl px-4 py-6 sm:px-8">
+            {view === 'review' && <ReviewView />}
+            {view === 'interview' && <OnboardingView />}
+            {view === 'profile' && <ProfileView />}
+          </div>
+        </main>
+      </div>
     </div>
+    </LiveContext.Provider>
   )
 }

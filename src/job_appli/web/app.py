@@ -14,6 +14,7 @@ from pydantic import BaseModel
 from job_appli.artifacts.store import ArtifactStore
 from job_appli.config import Settings, get_settings
 from job_appli.db.base import Database
+from job_appli.db.migrations import upgrade_schema
 from job_appli.db.models import DomainEvent
 from job_appli.events.publisher import publisher
 
@@ -29,6 +30,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
     settings.ensure_dirs()
     db = Database(settings.database_url)
+    upgrade_schema(db.engine)
     artifacts = ArtifactStore(settings.artifacts_dir)
 
     @asynccontextmanager

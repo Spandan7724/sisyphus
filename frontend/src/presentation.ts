@@ -49,6 +49,28 @@ export const sourceLabel = (source: string) => SOURCE_LABELS[source] ?? titleCas
 export const sensitivityLabel = (sensitivity: string) =>
   SENSITIVITY_LABELS[sensitivity] ?? titleCase(sensitivity)
 
+const EVENT_VERBS: Record<string, string> = {
+  'resume.ingested': 'read a resume',
+  'resume.draft.extracted': 'extracted facts from the resume',
+  'profile.fact.confirmed': 'confirmed a fact',
+  'profile.fact.updated': 'updated a fact',
+  'profile.fact.deleted': 'removed a fact',
+  'profile.story.confirmed': 'confirmed a story',
+  'onboarding.question.generated': 'prepared new questions',
+  'onboarding.question.answered': 'recorded an answer',
+}
+
+// The ticker states what happened in the third person, without adjectives: reporting, not performing.
+export function eventLine(event: {
+  event_type: string
+  actor: string
+  reason: string | null
+}): string {
+  const who = event.actor === 'user' ? 'you' : 'agent'
+  const verb = EVENT_VERBS[event.event_type] ?? titleCase(event.event_type.split('.').slice(1).join(' ')).toLowerCase()
+  return event.reason ? `${who} ${verb} — ${event.reason}` : `${who} ${verb}`
+}
+
 export function factKey(value: string): string {
   return value
     .trim()

@@ -7,6 +7,13 @@ from job_appli.artifacts.store import ArtifactStore
 from job_appli.db.models import DomainEvent
 from job_appli.events.publisher import publisher
 from job_appli.llm.prompts import load_prompt
+from job_appli.web.app import create_app
+
+
+def test_app_startup_applies_migrations(settings):
+    app = create_app(settings)
+
+    assert "resume" in sa.inspect(app.state.db.engine).get_table_names()
 
 
 def test_sqlite_pragmas(db):

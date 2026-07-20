@@ -1,4 +1,4 @@
-"""Alembic environment: migrates the domain schema while leaving DBOS-owned tables alone."""
+"""Migrate the domain schema while leaving DBOS-owned tables alone."""
 
 from logging.config import fileConfig
 
@@ -52,6 +52,18 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
+    supplied_connection = config.attributes.get("connection")
+    if supplied_connection is not None:
+        context.configure(
+            connection=supplied_connection,
+            target_metadata=target_metadata,
+            include_object=include_object,
+            render_as_batch=True,
+        )
+        with context.begin_transaction():
+            context.run_migrations()
+        return
+
     settings = get_settings()
     settings.ensure_dirs()
     connectable = create_engine(settings.database_url)

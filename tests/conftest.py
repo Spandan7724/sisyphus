@@ -4,7 +4,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from job_appli.config import Settings
-from job_appli.db.base import Base, Database
+from job_appli.db.base import Database
+from job_appli.db.migrations import upgrade_schema
 from job_appli.web.app import create_app
 
 
@@ -17,7 +18,7 @@ def settings(tmp_path) -> Settings:
 def db(settings) -> Database:
     settings.ensure_dirs()
     database = Database(settings.database_url)
-    Base.metadata.create_all(database.engine)
+    upgrade_schema(database.engine)
     return database
 
 
